@@ -62,28 +62,53 @@ const ProcessSimulator = () => {
     let clock = 0;
     let runningProcess = null;
     let remainingProcesses = [...processData];
+    let readyQueue  = [];
+    let watingQueue = [];
   
     while (!stopRef.current && (remainingProcesses.length > 0 || queue.length > 0 || runningProcess)) {
       let hasActivity = false; // Track if any processing occurred in this iteration
   
       const newArrivals = remainingProcesses.filter((p) => p.arrivalTime <= clock);
       if (newArrivals.length > 0) {
-        newArrivals.forEach((process) => {
-          queue.push(process);
-          setLog((prevLog) => [
-            ...prevLog,
-            {
-              time: clock,
-              running: currentRunning ? currentRunning.pid : "None",
-              ready: queue.map((p) => p.pid).join(", "),
-              waiting: remainingProcesses.filter((p) => p.arrivalTime <= clock).map((p) => p.pid).join(", "),
-              event: `Process ${process.pid} arrived and added to Ready Queue`,
-            },
-          ]);
-        });
-        remainingProcesses = remainingProcesses.filter((p) => !newArrivals.includes(p));
-        setCurrentQueue([...queue]);
-        
+        if (runningProcess) {
+          newArrivals.forEach((process) => {
+            queue.push(process);
+            remainingProcesses = remainingProcesses.filter((p) => !newArrivals.includes(p));
+            watingQueue = [...queue]
+            let rQStr = readyQueue.map((p) => p.pid).join(", ");
+            let wQStr = watingQueue.map((p) => p.pid).join(", ");
+            setCurrentWaiting(watingQueue);
+            setLog((prevLog) => [
+              ...prevLog,
+              {
+                time: clock,
+                running: runningProcess.pid,
+                ready: rQStr,
+                waiting: wQStr,
+                event: `Process ${process.pid} arrived and added to Waiting Queue`,
+              },
+            ]);
+          });
+        }else {
+          newArrivals.forEach((process) => {
+            queue.push(process);
+            remainingProcesses = remainingProcesses.filter((p) => !newArrivals.includes(p));
+            readyQueue = [process]
+            let rQStr = readyQueue.map((p) => p.pid).join(", ");
+            let wQStr = watingQueue.map((p) => p.pid).join(", ");
+            setCurrentQueue(readyQueue);
+            setLog((prevLog) => [
+              ...prevLog,
+              {
+                time: clock,
+                running: currentRunning ? currentRunning.pid : "None",
+                ready: rQStr,
+                waiting: wQStr,
+                event: `Process ${process.pid} arrived and added to Ready Queue`,
+              },
+            ]);
+          });
+        }
         hasActivity = true;
       }
   
@@ -108,15 +133,18 @@ const ProcessSimulator = () => {
             selectedProcess = queue.shift();
         }
         runningProcess = selectedProcess;
-        setCurrentQueue([...queue]);
+        readyQueue = [...queue];
+        setCurrentQueue(readyQueue);
         setCurrentRunning(runningProcess);
+        let rQStr = readyQueue.map((p) => p.pid).join(", ");
+        let wQStr = watingQueue.map((p) => p.pid).join(", ");
         setLog((prevLog) => [
           ...prevLog,
           {
             time: clock,
             running: runningProcess.pid,
-            ready: queue.map((p) => p.pid).join(", "),
-            waiting: remainingProcesses.filter((p) => p.arrivalTime <= clock).map((p) => p.pid).join(", "),
+            ready: rQStr,
+            waiting: wQStr,
             event: `Process ${runningProcess.pid} moved from Ready Queue to Running`,
           },
         ]);
@@ -134,31 +162,52 @@ const ProcessSimulator = () => {
         hasActivity = true;
   
         if (runningProcess.burstTime === 0) {
+          let pid = runningProcess.pid;
+          let rQStr = readyQueue.map((p) => p.pid).join(", ");
+          let wQStr = watingQueue.map((p) => p.pid).join(", ")
           setLog((prevLog) => [
             ...prevLog,
             {
-              time: clock + 1,
-              running: "None",
-              ready: queue.map((p) => p.pid).join(", "),
-              waiting: remainingProcesses.filter((p) => p.arrivalTime <= clock + 1).map((p) => p.pid).join(", "),
-              event: `Process ${runningProcess.pid} completed execution and terminated`,
+              time: clock,
+              running: pid,
+              ready: rQStr,
+              waiting: wQStr,
+              event: `Process ${pid} completed execution and terminated`,
             },
           ]);
           runningProcess = null;
           setCurrentRunning(null);
+          
+        }else {
+          let rQStr = readyQueue.map((p) => p.pid).join(", ");
+          let wQStr = watingQueue.map((p) => p.pid).join(", ");
+          setLog((prevLog) => [
+            ...prevLog,
+            {
+              time: clock,
+              running: runningProcess ? runningProcess.pid : "None",
+              ready: rQStr,
+              waiting: wQStr,
+              event: `State at Time ${clock} RP`,
+            },
+          ]);
         }
+      }else{
+        let rQStr = readyQueue.map((p) => p.pid).join(", ");
+        let wQStr = watingQueue.map((p) => p.pid).join(", ")
+        setLog((prevLog) => [
+          ...prevLog,
+          {
+            time: clock,
+            running: runningProcess ? runningProcess.pid : "None",
+            ready: rQStr,
+            waiting: wQStr,
+            event: `State at Time ${clock} NRP`,
+          },
+        ]);
       }
-  
-      setLog((prevLog) => [
-        ...prevLog,
-        {
-          time: clock,
-          running: runningProcess ? runningProcess.pid : "None",
-          ready: queue.map((p) => p.pid).join(", "),
-          waiting: remainingProcesses.filter((p) => p.arrivalTime <= clock).map((p) => p.pid).join(", "),
-          event: `State at Time ${clock}`,
-        },
-      ]);
+
+      
   
       // Increment clock only if there was activity or forced by termination
       if (hasActivity || runningProcess) {
@@ -174,8 +223,8 @@ const ProcessSimulator = () => {
           break; // No more processes
         }
       }
-  
-      setCurrentWaiting(remainingProcesses.filter((p) => p.arrivalTime <= clock));
+      watingQueue = remainingProcesses.filter((p) => p.arrivalTime <= clock);
+      setCurrentWaiting(watingQueue);
       setSimulationData([...scheduledProcesses]);
     }
   
