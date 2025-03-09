@@ -4,6 +4,24 @@ import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button, Select, MenuItem, Input, Table, TableHead, TableRow, TableCell, TableBody, Paper } from "@mui/material";
 
+
+class Process {
+  pid: string;
+  arrivalTime: number;
+  burstTime: number;
+  priority: number;
+  color: string;
+
+  constructor(pid: string, arrivalTime: number, burstTime: number, priority: number, color: string) {
+    this.pid = pid;
+    this.arrivalTime = arrivalTime;
+    this.burstTime = burstTime;
+    this.priority = priority;
+    this.color = color;
+  }
+}
+
+
 const ProcessSimulator = () => {
   const [csvFile, setCsvFile] = useState(null);
   const [processData, setProcessData] = useState([]);
@@ -232,6 +250,107 @@ const ProcessSimulator = () => {
     stopRef.current = false;
   };
 
+  const runSimulation2 = async () => {
+    if (!csvFile) {
+      alert("Please upload a CSV file first.");
+      return;
+    }
+    stopRef.current = false;
+    setRunning(true);
+    setSimulationData([]);
+    setLog([]);
+    setCurrentRunning(null);
+    setCurrentQueue([]);
+    setCurrentWaiting([]);
+    setCurrentClock(0);
+    const totalBurstTime = processData.reduce((sum, process) => sum + process.burstTime, 0);
+    let clockCount = 0;
+    let remainingProcessesData: Process[] = processData.map(data => 
+      new Process(data.pid, data.arrivalTime, data.burstTime, data.priority, data.color)
+    );    
+    remainingProcessesData.sort((a, b) => a.arrivalTime - b.arrivalTime);
+    console.log(remainingProcessesData);
+    let waitingQueue: Process[] = [];
+    let readyProcess: Process | null = null;
+    let currentRunning: Process | null = null;
+  
+    while (clockCount <= totalBurstTime) {
+      await sleep(1000);
+      if (remainingProcessesData.length > 0) {
+        let nextIncommingProcess = remainingProcessesData[0];
+        if (nextIncommingProcess.arrivalTime == clockCount) {
+          let currentProcess = remainingProcessesData[0]; // Update currentProcess here
+          console.log(currentProcess.pid);
+          remainingProcessesData.shift();
+          console.log(remainingProcessesData);
+  
+          waitingQueue.push(currentProcess);
+          setCurrentWaiting(waitingQueue);
+          setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentProcess.pid} pushed to waiting queue`);
+          console.log("nextIncommingProcess 1");
+          continue;
+        }
+      }
+  
+      if (currentRunning == null) {
+        if (readyProcess == null) { 
+          readyProcess = waitingQueue.shift();
+          if (readyProcess) { // Ensure readyProcess is not null
+            setCurrentWaiting(waitingQueue);
+            setCurrentQueue([readyProcess]);
+            setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${readyProcess.pid} pushed to ready queue from waiting queue`);
+            console.log("nextIncommingProcess 2");
+            continue;
+          }
+        } else {
+          currentRunning = readyProcess;
+          readyProcess = null
+          setCurrentQueue([]);
+          setCurrentRunning(currentRunning);
+          setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} pushed to running`);
+          console.log("nextIncommingProcess 3");
+          continue;
+        }
+      } else {
+        if (currentRunning.burstTime > 0) {
+          
+          setCurrentRunning(currentRunning);
+          setCurrentQueue([]);
+          readyProcess = null
+          setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} is running & remaining task ${currentRunning.burstTime}`);
+          currentRunning.burstTime -= 1;
+          clockCount++;
+          console.log("nextIncommingProcess 4");
+          continue;
+        } else {
+          currentRunning = null;
+          setCurrentRunning(null);
+          console.log("nextIncommingProcess 5");
+          continue;
+        }
+      }
+    }
+  };
+  
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+  
+  function setLoggger(currentRunning: Process | null, clock: number, ready: Process | null, waiting: Process[], event: string) {
+    let waitingString = waiting.map((p) => p.pid).join(", ");
+  
+    setLog((prevLog) => [
+      ...prevLog,
+      {
+        time: clock,
+        running: currentRunning ? currentRunning.pid : null,
+        ready: ready ? ready.pid : null,
+        waiting: waitingString,
+        event: event,
+      },
+    ]);
+  }
+
   const handleStop = () => {
     stopRef.current = true;
     setRunning(false);
@@ -301,7 +420,7 @@ const ProcessSimulator = () => {
           <MenuItem value="Priority">Priority-Based Scheduling</MenuItem>
         </Select>
         <div className="flex gap-2">
-          <Button variant="contained" color="primary" onClick={runSimulation} disabled={running}>
+          <Button variant="contained" color="primary" onClick={runSimulation2} disabled={running}>
             {running ? "Running..." : "Run Simulation"}
           </Button>
           <Button variant="contained" color="secondary" onClick={handleStop} disabled={!running}>
