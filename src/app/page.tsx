@@ -4,7 +4,6 @@ import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import { Button, Select, MenuItem, Input, Table, TableHead, TableRow, TableCell, TableBody, Paper } from "@mui/material";
 
-
 class Process {
   pid: string;
   arrivalTime: number;
@@ -12,9 +11,9 @@ class Process {
   priority: number;
   color: string;
   currentExecutionTime: number;
-  completionTime:Number;
+  completionTime: Number;
 
-  constructor(pid: string, arrivalTime: number, burstTime: number, priority: number, color: string, currentExecutionTime: number, completionTime:Number) {
+  constructor(pid: string, arrivalTime: number, burstTime: number, priority: number, color: string, currentExecutionTime: number, completionTime: Number) {
     this.pid = pid;
     this.arrivalTime = arrivalTime;
     this.burstTime = burstTime;
@@ -24,7 +23,6 @@ class Process {
     this.completionTime = completionTime;
   }
 }
-
 
 const ProcessSimulator = () => {
   const [csvFile, setCsvFile] = useState(null);
@@ -40,6 +38,7 @@ const ProcessSimulator = () => {
   const [averageWaitTime, setAverageWaitTime] = useState(0);
   const [averageResponseTime, setAverageResponseTime] = useState(0);
   const [averageTurnaroundTime, setAverageTurnaroundTime] = useState(0);
+  const [hasRunBefore, setHasRunBefore] = useState(false); // Track if simulation has run before
   const colorPalette = ["#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#A133FF", "#33FFF9"];
   
   const fileInputRef = useRef(null);
@@ -73,8 +72,22 @@ const ProcessSimulator = () => {
       alert("Please upload a CSV file first.");
       return;
     }
+  
+    if (hasRunBefore) {
+      const shouldRestart = window.confirm("The simulation has already run. Do you want to start over?");
+      if (!shouldRestart) {
+        return;
+      }
+    }
+  
+    // Reset state if starting over
+    if (hasRunBefore) {
+      handleClear();
+    }
+  
     stopRef.current = false;
     setRunning(true);
+    setHasRunBefore(true); // Mark that the simulation has run before
     setSimulationData([]);
     setLog([]);
     setCurrentRunning(null);
@@ -99,12 +112,18 @@ const ProcessSimulator = () => {
     let completionTimes = {}; // Track completion time for each process
   
     while (clockCount <= totalBurstTime) {
-      await sleep(1000);
+      if (stopRef.current) {
+        setRunning(false);
+        return;
+      }
+  
+      await sleep(1000); // Simulate time passing
+  
+      // Handle incoming processes
       if (remainingProcessesData.length > 0) {
         let nextIncommingProcess = remainingProcessesData[0];
-        if (nextIncommingProcess.arrivalTime == clockCount) {
-          let currentProcess = remainingProcessesData[0];
-          remainingProcessesData.shift();
+        if (nextIncommingProcess.arrivalTime === clockCount) {
+          let currentProcess = remainingProcessesData.shift();
           waitingQueue.push(currentProcess);
           if (algorithm === "Priority") {
             waitingQueue.sort((a, b) => a.priority - b.priority);
@@ -117,6 +136,7 @@ const ProcessSimulator = () => {
         }
       }
   
+      // Handle process scheduling
       if (currentRunning == null) {
         if (readyProcess == null) {
           readyProcess = waitingQueue.shift();
@@ -183,7 +203,10 @@ const ProcessSimulator = () => {
       }
       clockCount++;
     }
-    console.log("process completed")
+  
+    // Simulation completed
+    console.log("Process completed");
+  
     // Calculate metrics after simulation ends
     const processes = processData.map((process) => {
       const completionTime = completionTimes[process.pid] || 0;
@@ -202,10 +225,13 @@ const ProcessSimulator = () => {
     const totalWaitTime = processes.reduce((sum, process) => sum + process.waitTime, 0);
     const totalResponseTime = processes.reduce((sum, process) => sum + process.responseTime, 0);
     const totalTurnaroundTime = processes.reduce((sum, process) => sum + process.turnaroundTime, 0);
-    console.log(completionTimes)
+  
     setAverageWaitTime(totalWaitTime / processData.length);
     setAverageResponseTime(totalResponseTime / processData.length);
     setAverageTurnaroundTime(totalTurnaroundTime / processData.length);
+  
+    // Reset the button state
+    setRunning(false);
   };
   
   function sleep(ms) {
@@ -243,6 +269,7 @@ const ProcessSimulator = () => {
     setCurrentQueue([]);
     setCurrentClock(0);
     setCurrentWaiting([]);
+    setHasRunBefore(false); // Reset the hasRunBefore state
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -296,7 +323,8 @@ const ProcessSimulator = () => {
           <MenuItem value="Priority">Priority-Based Scheduling</MenuItem>
         </Select>
         <div className="flex gap-2">
-          <Button variant="contained" color="primary" onClick={runSimulation2} disabled={running}>
+        <Button
+            variant="contained" color="primary" onClick={runSimulation2} disabled={running}>
             {running ? "Running..." : "Run Simulation"}
           </Button>
           <Button variant="contained" color="secondary" onClick={handleStop} disabled={!running}>
@@ -399,30 +427,30 @@ const ProcessSimulator = () => {
       </Paper>
 
       <Paper className="mt-6 p-4">
-  <h2 className="text-lg font-semibold mb-2">Performance Metrics</h2>
-  <Table>
-    <TableHead>
-      <TableRow>
-        <TableCell>Metric</TableCell>
-        <TableCell>Value</TableCell>
-      </TableRow>
-    </TableHead>
-    <TableBody>
-      <TableRow>
-        <TableCell>Average Wait Time</TableCell>
-        <TableCell>{averageWaitTime.toFixed(2)}</TableCell>
-      </TableRow>
-      <TableRow>
-        <TableCell>Average Response Time</TableCell>
-        <TableCell>{averageResponseTime.toFixed(2)}</TableCell>
-      </TableRow>
-      <TableRow>
-        <TableCell>Average Turnaround Time</TableCell>
-        <TableCell>{averageTurnaroundTime.toFixed(2)}</TableCell>
-      </TableRow>
-    </TableBody>
-  </Table>
-</Paper>
+        <h2 className="text-lg font-semibold mb-2">Performance Metrics</h2>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Metric</TableCell>
+              <TableCell>Value</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell>Average Wait Time</TableCell>
+              <TableCell>{averageWaitTime.toFixed(2)}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Average Response Time</TableCell>
+              <TableCell>{averageResponseTime.toFixed(2)}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>Average Turnaround Time</TableCell>
+              <TableCell>{averageTurnaroundTime.toFixed(2)}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </Paper>
     </div>
   );
 };
