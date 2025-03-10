@@ -11,13 +11,15 @@ class Process {
   burstTime: number;
   priority: number;
   color: string;
+  currentExecutionTime: number;
 
-  constructor(pid: string, arrivalTime: number, burstTime: number, priority: number, color: string) {
+  constructor(pid: string, arrivalTime: number, burstTime: number, priority: number, color: string, currentExecutionTime: number) {
     this.pid = pid;
     this.arrivalTime = arrivalTime;
     this.burstTime = burstTime;
     this.priority = priority;
     this.color = color;
+    this.currentExecutionTime = currentExecutionTime;
   }
 }
 
@@ -61,195 +63,6 @@ const ProcessSimulator = () => {
     reader.readAsText(file);
   };
 
-  const runSimulation = async () => {
-    if (!csvFile) {
-      alert("Please upload a CSV file first.");
-      return;
-    }
-    stopRef.current = false;
-    setRunning(true);
-    setSimulationData([]);
-    setLog([]);
-    setCurrentRunning(null);
-    setCurrentQueue([]);
-    setCurrentWaiting([]);
-    setCurrentClock(0);
-  
-    let scheduledProcesses = [];
-    let queue = [];
-    let clock = 0;
-    let runningProcess = null;
-    let remainingProcesses = [...processData];
-    let readyQueue  = [];
-    let watingQueue = [];
-  
-    while (!stopRef.current && (remainingProcesses.length > 0 || queue.length > 0 || runningProcess)) {
-      let hasActivity = false; // Track if any processing occurred in this iteration
-  
-      const newArrivals = remainingProcesses.filter((p) => p.arrivalTime <= clock);
-      if (newArrivals.length > 0) {
-        if (runningProcess) {
-          newArrivals.forEach((process) => {
-            queue.push(process);
-            remainingProcesses = remainingProcesses.filter((p) => !newArrivals.includes(p));
-            watingQueue = [...queue]
-            let rQStr = readyQueue.map((p) => p.pid).join(", ");
-            let wQStr = watingQueue.map((p) => p.pid).join(", ");
-            setCurrentWaiting(watingQueue);
-            setLog((prevLog) => [
-              ...prevLog,
-              {
-                time: clock,
-                running: runningProcess.pid,
-                ready: rQStr,
-                waiting: wQStr,
-                event: `Process ${process.pid} arrived and added to Waiting Queue`,
-              },
-            ]);
-          });
-        }else {
-          newArrivals.forEach((process) => {
-            queue.push(process);
-            remainingProcesses = remainingProcesses.filter((p) => !newArrivals.includes(p));
-            readyQueue = [process]
-            let rQStr = readyQueue.map((p) => p.pid).join(", ");
-            let wQStr = watingQueue.map((p) => p.pid).join(", ");
-            setCurrentQueue(readyQueue);
-            setLog((prevLog) => [
-              ...prevLog,
-              {
-                time: clock,
-                running: currentRunning ? currentRunning.pid : "None",
-                ready: rQStr,
-                waiting: wQStr,
-                event: `Process ${process.pid} arrived and added to Ready Queue`,
-              },
-            ]);
-          });
-        }
-        hasActivity = true;
-      }
-  
-      if (!runningProcess && queue.length > 0) {
-        let selectedProcess;
-        switch (algorithm) {
-          case "FCFS":
-            selectedProcess = queue.shift();
-            break;
-          case "RoundRobin":
-            selectedProcess = queue.shift();
-            if (selectedProcess.burstTime > 2) {
-              queue.push({ ...selectedProcess, burstTime: selectedProcess.burstTime - 2 });
-              selectedProcess = { ...selectedProcess, burstTime: 2 };
-            }
-            break;
-          case "Priority":
-            queue.sort((a, b) => a.priority - b.priority);
-            selectedProcess = queue.shift();
-            break;
-          default:
-            selectedProcess = queue.shift();
-        }
-        runningProcess = selectedProcess;
-        readyQueue = [...queue];
-        setCurrentQueue(readyQueue);
-        setCurrentRunning(runningProcess);
-        let rQStr = readyQueue.map((p) => p.pid).join(", ");
-        let wQStr = watingQueue.map((p) => p.pid).join(", ");
-        setLog((prevLog) => [
-          ...prevLog,
-          {
-            time: clock,
-            running: runningProcess.pid,
-            ready: rQStr,
-            waiting: wQStr,
-            event: `Process ${runningProcess.pid} moved from Ready Queue to Running`,
-          },
-        ]);
-        hasActivity = true;
-      }
-  
-      if (runningProcess) {
-        runningProcess.burstTime--;
-        scheduledProcesses.push({
-          pid: runningProcess.pid,
-          startTime: clock,
-          duration: 1,
-          color: runningProcess.color,
-        });
-        hasActivity = true;
-  
-        if (runningProcess.burstTime === 0) {
-          let pid = runningProcess.pid;
-          let rQStr = readyQueue.map((p) => p.pid).join(", ");
-          let wQStr = watingQueue.map((p) => p.pid).join(", ")
-          setLog((prevLog) => [
-            ...prevLog,
-            {
-              time: clock,
-              running: pid,
-              ready: rQStr,
-              waiting: wQStr,
-              event: `Process ${pid} completed execution and terminated`,
-            },
-          ]);
-          runningProcess = null;
-          setCurrentRunning(null);
-          
-        }else {
-          let rQStr = readyQueue.map((p) => p.pid).join(", ");
-          let wQStr = watingQueue.map((p) => p.pid).join(", ");
-          setLog((prevLog) => [
-            ...prevLog,
-            {
-              time: clock,
-              running: runningProcess ? runningProcess.pid : "None",
-              ready: rQStr,
-              waiting: wQStr,
-              event: `State at Time ${clock} RP`,
-            },
-          ]);
-        }
-      }else{
-        let rQStr = readyQueue.map((p) => p.pid).join(", ");
-        let wQStr = watingQueue.map((p) => p.pid).join(", ")
-        setLog((prevLog) => [
-          ...prevLog,
-          {
-            time: clock,
-            running: runningProcess ? runningProcess.pid : "None",
-            ready: rQStr,
-            waiting: wQStr,
-            event: `State at Time ${clock} NRP`,
-          },
-        ]);
-      }
-
-      
-  
-      // Increment clock only if there was activity or forced by termination
-      if (hasActivity || runningProcess) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        clock++;
-        setCurrentClock(clock);
-      } else {
-        const nextArrival = remainingProcesses.reduce((min, p) => p.arrivalTime < min ? p.arrivalTime : min, Infinity);
-        if (nextArrival !== Infinity) {
-          clock += 1;
-          setCurrentClock(clock);
-        } else {
-          break; // No more processes
-        }
-      }
-      watingQueue = remainingProcesses.filter((p) => p.arrivalTime <= clock);
-      setCurrentWaiting(watingQueue);
-      setSimulationData([...scheduledProcesses]);
-    }
-  
-    setRunning(false);
-    stopRef.current = false;
-  };
-
   const runSimulation2 = async () => {
     if (!csvFile) {
       alert("Please upload a CSV file first.");
@@ -266,7 +79,7 @@ const ProcessSimulator = () => {
     const totalBurstTime = processData.reduce((sum, process) => sum + process.burstTime, 0);
     let clockCount = 0;
     let remainingProcessesData: Process[] = processData.map(data => 
-      new Process(data.pid, data.arrivalTime, data.burstTime, data.priority, data.color)
+      new Process(data.pid, data.arrivalTime, data.burstTime, data.priority, data.color, 0)
     );    
     remainingProcessesData.sort((a, b) => a.arrivalTime - b.arrivalTime);
     console.log(remainingProcessesData);
@@ -285,8 +98,16 @@ const ProcessSimulator = () => {
           console.log(remainingProcessesData);
   
           waitingQueue.push(currentProcess);
+          if (algorithm === "Priority") {
+            waitingQueue.sort((a, b) => {
+                return a.priority - b.priority;
+            });
+            setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentProcess.pid} pushed to waiting queue by priority`);
+          }else {
+            setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentProcess.pid} pushed to waiting queue`);
+          }
           setCurrentWaiting(waitingQueue);
-          setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentProcess.pid} pushed to waiting queue`);
+         
           console.log("nextIncommingProcess 1");
           continue;
         }
@@ -313,15 +134,35 @@ const ProcessSimulator = () => {
         }
       } else {
         if (currentRunning.burstTime > 0) {
-          
-          setCurrentRunning(currentRunning);
-          setCurrentQueue([]);
-          readyProcess = null
-          setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} is running & remaining task ${currentRunning.burstTime}`);
-          currentRunning.burstTime -= 1;
-          clockCount++;
-          console.log("nextIncommingProcess 4");
-          continue;
+          switch (algorithm) {
+            case "FCFS" :
+            case "Priority":
+              setCurrentRunning(currentRunning);
+              setCurrentQueue([]);
+              readyProcess = null
+              setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} is running & remaining task ${currentRunning.burstTime}`);
+              currentRunning.burstTime -= 1;
+              clockCount++;
+              console.log("nextIncommingProcess 4");
+              currentRunning.currentExecutionTime += 1
+              continue;
+            case "RoundRobin" :
+              if (currentRunning.currentExecutionTime < 2) {
+                currentRunning.currentExecutionTime += 1
+                currentRunning.burstTime -= 1;
+                clockCount++;
+                setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} is running`);
+              }else {
+                let pid = currentRunning.pid;
+                currentRunning.currentExecutionTime = 0
+                waitingQueue.push(currentRunning)
+                currentRunning = null
+                setCurrentRunning(null);
+                setCurrentWaiting(waitingQueue)
+                setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${pid} is going to waiting queue`);
+              }
+          }
+
         } else {
           currentRunning = null;
           setCurrentRunning(null);
