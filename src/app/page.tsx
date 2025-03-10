@@ -12,14 +12,16 @@ class Process {
   priority: number;
   color: string;
   currentExecutionTime: number;
+  completionTime:Number;
 
-  constructor(pid: string, arrivalTime: number, burstTime: number, priority: number, color: string, currentExecutionTime: number) {
+  constructor(pid: string, arrivalTime: number, burstTime: number, priority: number, color: string, currentExecutionTime: number, completionTime:Number) {
     this.pid = pid;
     this.arrivalTime = arrivalTime;
     this.burstTime = burstTime;
     this.priority = priority;
     this.color = color;
     this.currentExecutionTime = currentExecutionTime;
+    this.completionTime = completionTime;
   }
 }
 
@@ -35,6 +37,9 @@ const ProcessSimulator = () => {
   const [currentQueue, setCurrentQueue] = useState([]);
   const [currentClock, setCurrentClock] = useState(0);
   const [currentWaiting, setCurrentWaiting] = useState([]);
+  const [averageWaitTime, setAverageWaitTime] = useState(0);
+  const [averageResponseTime, setAverageResponseTime] = useState(0);
+  const [averageTurnaroundTime, setAverageTurnaroundTime] = useState(0);
   const colorPalette = ["#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#A133FF", "#33FFF9"];
   
   const fileInputRef = useRef(null);
@@ -76,44 +81,46 @@ const ProcessSimulator = () => {
     setCurrentQueue([]);
     setCurrentWaiting([]);
     setCurrentClock(0);
+    setAverageWaitTime(0);
+    setAverageResponseTime(0);
+    setAverageTurnaroundTime(0);
+  
     const totalBurstTime = processData.reduce((sum, process) => sum + process.burstTime, 0);
     let clockCount = 0;
-    let remainingProcessesData: Process[] = processData.map(data => 
-      new Process(data.pid, data.arrivalTime, data.burstTime, data.priority, data.color, 0)
-    );    
+    let remainingProcessesData = processData.map(data => 
+      new Process(data.pid, data.arrivalTime, data.burstTime, data.priority, data.color, 0, 0)
+    );
     remainingProcessesData.sort((a, b) => a.arrivalTime - b.arrivalTime);
-    let waitingQueue: Process[] = [];
-    let readyProcess: Process | null = null;
-    let currentRunning: Process | null = null;
-    let scheduledProcess : Process[] = [];
+    let waitingQueue = [];
+    let readyProcess = null;
+    let currentRunning = null;
+    let scheduledProcess = [];
+    let firstResponse = {}; // Track the first response time for each process
+    let completionTimes = {}; // Track completion time for each process
   
     while (clockCount <= totalBurstTime) {
       await sleep(1000);
       if (remainingProcessesData.length > 0) {
         let nextIncommingProcess = remainingProcessesData[0];
         if (nextIncommingProcess.arrivalTime == clockCount) {
-          let currentProcess = remainingProcessesData[0]; // Update currentProcess here
+          let currentProcess = remainingProcessesData[0];
           remainingProcessesData.shift();
-  
           waitingQueue.push(currentProcess);
           if (algorithm === "Priority") {
-            waitingQueue.sort((a, b) => {
-                return a.priority - b.priority;
-            });
+            waitingQueue.sort((a, b) => a.priority - b.priority);
             setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentProcess.pid} pushed to waiting queue by priority`);
-          }else {
+          } else {
             setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentProcess.pid} pushed to waiting queue`);
           }
           setCurrentWaiting(waitingQueue);
-         
           continue;
         }
       }
   
       if (currentRunning == null) {
-        if (readyProcess == null) { 
+        if (readyProcess == null) {
           readyProcess = waitingQueue.shift();
-          if (readyProcess) { // Ensure readyProcess is not null
+          if (readyProcess) {
             setCurrentWaiting(waitingQueue);
             setCurrentQueue([readyProcess]);
             setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${readyProcess.pid} pushed to ready queue from waiting queue`);
@@ -121,54 +128,84 @@ const ProcessSimulator = () => {
           }
         } else {
           currentRunning = readyProcess;
-          readyProcess = null
+          readyProcess = null;
           setCurrentQueue([]);
           setCurrentRunning(currentRunning);
           setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} pushed to running`);
+  
+          // Track first response time
+          if (!firstResponse[currentRunning.pid]) {
+            firstResponse[currentRunning.pid] = clockCount;
+          }
           continue;
         }
       } else {
         if (currentRunning.burstTime > 0) {
           switch (algorithm) {
-            case "FCFS" :
+            case "FCFS":
             case "Priority":
               setCurrentRunning(currentRunning);
               setCurrentQueue([]);
-              readyProcess = null
-              scheduledProcess.push(currentRunning)
-              setSimulationData(scheduledProcess)
+              readyProcess = null;
+              scheduledProcess.push(currentRunning);
+              setSimulationData(scheduledProcess);
               setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} is running & remaining task ${currentRunning.burstTime}`);
               currentRunning.burstTime -= 1;
               clockCount++;
-              currentRunning.currentExecutionTime += 1
+              currentRunning.currentExecutionTime += 1;
               continue;
-            case "RoundRobin" :
+            case "RoundRobin":
               if (currentRunning.currentExecutionTime < 2) {
-                currentRunning.currentExecutionTime += 1
+                currentRunning.currentExecutionTime += 1;
                 currentRunning.burstTime -= 1;
                 clockCount++;
-                simulationData.push(currentRunning)
-                scheduledProcess.push(currentRunning)
-                setSimulationData(scheduledProcess)
+                simulationData.push(currentRunning);
+                scheduledProcess.push(currentRunning);
+                setSimulationData(scheduledProcess);
                 setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} is running`);
-              }else {
+              } else {
                 let pid = currentRunning.pid;
-                currentRunning.currentExecutionTime = 0
-                waitingQueue.push(currentRunning)
-                currentRunning = null
+                currentRunning.currentExecutionTime = 0;
+                waitingQueue.push(currentRunning);
+                currentRunning = null;
                 setCurrentRunning(null);
-                setCurrentWaiting(waitingQueue)
+                setCurrentWaiting(waitingQueue);
                 setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${pid} is going to waiting queue`);
               }
           }
-
         } else {
+          // Process completed
+          completionTimes[currentRunning.pid] = clockCount; // Store completion time
           currentRunning = null;
           setCurrentRunning(null);
           continue;
         }
       }
+      clockCount++;
     }
+    console.log("process completed")
+    // Calculate metrics after simulation ends
+    const processes = processData.map((process) => {
+      const completionTime = completionTimes[process.pid] || 0;
+      const turnaroundTime = completionTime - process.arrivalTime;
+      const waitTime = turnaroundTime - process.burstTime;
+      const responseTime = firstResponse[process.pid] - process.arrivalTime;
+  
+      return {
+        pid: process.pid,
+        turnaroundTime,
+        waitTime,
+        responseTime,
+      };
+    });
+  
+    const totalWaitTime = processes.reduce((sum, process) => sum + process.waitTime, 0);
+    const totalResponseTime = processes.reduce((sum, process) => sum + process.responseTime, 0);
+    const totalTurnaroundTime = processes.reduce((sum, process) => sum + process.turnaroundTime, 0);
+    console.log(completionTimes)
+    setAverageWaitTime(totalWaitTime / processData.length);
+    setAverageResponseTime(totalResponseTime / processData.length);
+    setAverageTurnaroundTime(totalTurnaroundTime / processData.length);
   };
   
   function sleep(ms) {
@@ -339,7 +376,7 @@ const ProcessSimulator = () => {
         </Table>
       </Paper>
 
-      <Paper className="mt-6 p-4">
+      <Paper className="mt-6 p-6">
         <h2 className="text-lg font-semibold mb-2">Gantt Chart</h2>
         <div className="flex border w-full">
           {simulationData.map((data, index) => (
@@ -351,12 +388,41 @@ const ProcessSimulator = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <span className="absolute -top-5 text-xs font-bold">{data.startTime}</span>
+              {index === 0 && (
+                <span className="absolute -left-0 -bottom-5 text-xs font-bold">{0}</span>
+              )}
+              <span className="absolute -right-0 -bottom-5 text-xs font-bold">{index + 1}</span>
               {data.pid}
             </motion.div>
           ))}
         </div>
       </Paper>
+
+      <Paper className="mt-6 p-4">
+  <h2 className="text-lg font-semibold mb-2">Performance Metrics</h2>
+  <Table>
+    <TableHead>
+      <TableRow>
+        <TableCell>Metric</TableCell>
+        <TableCell>Value</TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      <TableRow>
+        <TableCell>Average Wait Time</TableCell>
+        <TableCell>{averageWaitTime.toFixed(2)}</TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell>Average Response Time</TableCell>
+        <TableCell>{averageResponseTime.toFixed(2)}</TableCell>
+      </TableRow>
+      <TableRow>
+        <TableCell>Average Turnaround Time</TableCell>
+        <TableCell>{averageTurnaroundTime.toFixed(2)}</TableCell>
+      </TableRow>
+    </TableBody>
+  </Table>
+</Paper>
     </div>
   );
 };
