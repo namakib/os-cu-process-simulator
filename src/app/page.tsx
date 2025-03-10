@@ -82,10 +82,10 @@ const ProcessSimulator = () => {
       new Process(data.pid, data.arrivalTime, data.burstTime, data.priority, data.color, 0)
     );    
     remainingProcessesData.sort((a, b) => a.arrivalTime - b.arrivalTime);
-    console.log(remainingProcessesData);
     let waitingQueue: Process[] = [];
     let readyProcess: Process | null = null;
     let currentRunning: Process | null = null;
+    let scheduledProcess : Process[] = [];
   
     while (clockCount <= totalBurstTime) {
       await sleep(1000);
@@ -93,9 +93,7 @@ const ProcessSimulator = () => {
         let nextIncommingProcess = remainingProcessesData[0];
         if (nextIncommingProcess.arrivalTime == clockCount) {
           let currentProcess = remainingProcessesData[0]; // Update currentProcess here
-          console.log(currentProcess.pid);
           remainingProcessesData.shift();
-          console.log(remainingProcessesData);
   
           waitingQueue.push(currentProcess);
           if (algorithm === "Priority") {
@@ -108,7 +106,6 @@ const ProcessSimulator = () => {
           }
           setCurrentWaiting(waitingQueue);
          
-          console.log("nextIncommingProcess 1");
           continue;
         }
       }
@@ -120,7 +117,6 @@ const ProcessSimulator = () => {
             setCurrentWaiting(waitingQueue);
             setCurrentQueue([readyProcess]);
             setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${readyProcess.pid} pushed to ready queue from waiting queue`);
-            console.log("nextIncommingProcess 2");
             continue;
           }
         } else {
@@ -129,7 +125,6 @@ const ProcessSimulator = () => {
           setCurrentQueue([]);
           setCurrentRunning(currentRunning);
           setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} pushed to running`);
-          console.log("nextIncommingProcess 3");
           continue;
         }
       } else {
@@ -140,10 +135,11 @@ const ProcessSimulator = () => {
               setCurrentRunning(currentRunning);
               setCurrentQueue([]);
               readyProcess = null
+              scheduledProcess.push(currentRunning)
+              setSimulationData(scheduledProcess)
               setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} is running & remaining task ${currentRunning.burstTime}`);
               currentRunning.burstTime -= 1;
               clockCount++;
-              console.log("nextIncommingProcess 4");
               currentRunning.currentExecutionTime += 1
               continue;
             case "RoundRobin" :
@@ -151,6 +147,9 @@ const ProcessSimulator = () => {
                 currentRunning.currentExecutionTime += 1
                 currentRunning.burstTime -= 1;
                 clockCount++;
+                simulationData.push(currentRunning)
+                scheduledProcess.push(currentRunning)
+                setSimulationData(scheduledProcess)
                 setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} is running`);
               }else {
                 let pid = currentRunning.pid;
@@ -166,7 +165,6 @@ const ProcessSimulator = () => {
         } else {
           currentRunning = null;
           setCurrentRunning(null);
-          console.log("nextIncommingProcess 5");
           continue;
         }
       }
