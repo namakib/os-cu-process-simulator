@@ -25,7 +25,7 @@ class Process {
 }
 
 interface ProcessMetrics {
-  pid: string; // Change from number to string
+  pid: string;
   turnaroundTime: number;
   waitTime: number;
   responseTime: number;
@@ -520,15 +520,15 @@ const ProcessSimulator = () => {
           <h3 className="mb-4 text-lg font-medium text-gray-800">Performance Metrics</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-lg bg-blue-50 p-4">
-              <dt className="text-sm font-medium text-blue-600">Avg Wait Time</dt>
+              <dt className="text-sm font-medium text-blue-600">Average Wait Time</dt>
               <dd className="mt-1 text-2xl font-semibold text-blue-700">{averageWaitTime.toFixed(2)}</dd>
             </div>
             <div className="rounded-lg bg-green-50 p-4">
-              <dt className="text-sm font-medium text-green-600">Avg Response Time</dt>
+              <dt className="text-sm font-medium text-green-600">Average Response Time</dt>
               <dd className="mt-1 text-2xl font-semibold text-green-700">{averageResponseTime.toFixed(2)}</dd>
             </div>
             <div className="rounded-lg bg-purple-50 p-4">
-              <dt className="text-sm font-medium text-purple-600">Avg Turnaround Time</dt>
+              <dt className="text-sm font-medium text-purple-600">Average Turnaround Time</dt>
               <dd className="mt-1 text-2xl font-semibold text-purple-700">{averageTurnaroundTime.toFixed(2)}</dd>
             </div>
           </div>
