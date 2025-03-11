@@ -55,7 +55,8 @@ const ProcessSimulator = () => {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const text = e.target.result;
+      const text = e.target?.result as string | null;
+      if (!text) return;
       const rows = text.split("\n").slice(1);
       const parsedData = rows.map((row, index) => {
         const cols = row.split(",");
