@@ -10,10 +10,10 @@ class Process {
   priority: number;
   color: string;
   currentExecutionTime: number;
-  completionTime: Number;
+  completionTime: number;
 
 
-  constructor(pid: string, arrivalTime: number, burstTime: number, priority: number, color: string, currentExecutionTime: number, completionTime: Number) {
+  constructor(pid: string, arrivalTime: number, burstTime: number, priority: number, color: string, currentExecutionTime: number, completionTime: number) {
     this.pid = pid;
     this.arrivalTime = arrivalTime;
     this.burstTime = burstTime;
@@ -33,7 +33,6 @@ const ProcessSimulator = () => {
   const [running, setRunning] = useState(false);
   const [currentRunning, setCurrentRunning] = useState(null);
   const [currentQueue, setCurrentQueue] = useState([]);
-  const [currentClock, setCurrentClock] = useState(0);
   const [currentWaiting, setCurrentWaiting] = useState([]);
   const [averageWaitTime, setAverageWaitTime] = useState(0);
   const [averageResponseTime, setAverageResponseTime] = useState(0);
@@ -100,16 +99,16 @@ const ProcessSimulator = () => {
   
     const totalBurstTime = processData.reduce((sum, process) => sum + process.burstTime, 0);
     let clockCount = 0;
-    let remainingProcessesData = processData.map(data => 
+    const remainingProcessesData = processData.map(data => 
       new Process(data.pid, data.arrivalTime, data.burstTime, data.priority, data.color, 0, 0)
     );
     remainingProcessesData.sort((a, b) => a.arrivalTime - b.arrivalTime);
-    let waitingQueue = [];
+    const waitingQueue = [];
     let readyProcess = null;
     let currentRunning = null;
-    let scheduledProcess = [];
-    let firstResponse = {}; // Track the first response time for each process
-    let completionTimes = {}; // Track completion time for each process
+    const scheduledProcess = [];
+    const firstResponse = {}; // Track the first response time for each process
+    const completionTimes = {}; // Track completion time for each process
   
     while (clockCount <= totalBurstTime) {
       if (stopRef.current) {
@@ -184,7 +183,7 @@ const ProcessSimulator = () => {
                 setSimulationData(scheduledProcess);
                 setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} is running`);
               } else {
-                let pid = currentRunning.pid;
+                const pid = currentRunning.pid;
                 currentRunning.currentExecutionTime = 0;
                 waitingQueue.push(currentRunning);
                 currentRunning = null;
@@ -246,7 +245,7 @@ const ProcessSimulator = () => {
   }
   
   function setLoggger(currentRunning: Process | null, clock: number, ready: Process | null, waiting: Process[], event: string) {
-    let waitingString = waiting.map((p) => p.pid).join(", ");
+    const waitingString = waiting.map((p) => p.pid).join(", ");
   
     setLog((prevLog) => [
       ...prevLog,
