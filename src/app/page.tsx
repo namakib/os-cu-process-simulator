@@ -39,7 +39,7 @@ const ProcessSimulator = () => {
   const [log, setLog] = useState([]);
   const [running, setRunning] = useState(false);
   const [currentRunning, setCurrentRunning] = useState(null);
-  const [currentQueue, setCurrentQueue] = useState([]);
+  const [currentQueue, setCurrentQueue] = useState<Process[]>([]);
   const [currentWaiting, setCurrentWaiting] = useState<Process[]>([]);
   const [averageWaitTime, setAverageWaitTime] = useState(0);
   const [averageResponseTime, setAverageResponseTime] = useState(0);
