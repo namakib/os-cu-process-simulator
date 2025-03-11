@@ -68,8 +68,14 @@ const ProcessSimulator = () => {
           color: colorPalette[index % colorPalette.length],
         };
       });
-      setProcessData(parsedData);
-    };
+      setProcessData(
+        parsedData.map(process => ({
+          ...process,
+          currentExecutionTime: 0,  // Default value, update as needed
+          completionTime: 0         // Default value, update as needed
+        }))
+      );
+          };
     reader.readAsText(file);
   };
 
