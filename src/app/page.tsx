@@ -262,9 +262,9 @@ const ProcessSimulator = () => {
     setRunning(false);
   };
   
-  function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+  function sleep(ms: number) {
+    return new Promise<void>((resolve) => setTimeout(resolve, ms));
+  }  
   
   function setLoggger(currentRunning: Process | null, clock: number, ready: Process | null, waiting: Process[], event: string) {
     const waitingString = waiting.map((p) => p.pid).join(", ");
