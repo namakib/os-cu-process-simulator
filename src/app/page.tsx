@@ -25,7 +25,7 @@ class Process {
 }
 
 interface ProcessMetrics {
-  pid: number;
+  pid: string; // Change from number to string
   turnaroundTime: number;
   waitTime: number;
   responseTime: number;
