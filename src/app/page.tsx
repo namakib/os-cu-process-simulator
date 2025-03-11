@@ -9,11 +9,13 @@ class Process {
   burstTime: number;
   priority: number;
   color: string;
+  ioDuration:number;
+  ioPeriod:number;
   currentExecutionTime: number;
   completionTime: number;
 
 
-  constructor(pid: string, arrivalTime: number, burstTime: number, priority: number, color: string, currentExecutionTime: number, completionTime: number) {
+  constructor(pid: string, arrivalTime: number, burstTime: number, priority: number, color: string, currentExecutionTime: number, completionTime: number, ioDuration: number, ioPeriod: number) {
     this.pid = pid;
     this.arrivalTime = arrivalTime;
     this.burstTime = burstTime;
@@ -21,6 +23,8 @@ class Process {
     this.color = color;
     this.currentExecutionTime = currentExecutionTime;
     this.completionTime = completionTime;
+    this.ioDuration = ioDuration
+    this.ioPeriod = ioPeriod
   }
 }
 
@@ -85,6 +89,8 @@ const ProcessSimulator = () => {
           burstTime: parseInt(cols[2]) || 0,
           priority: cols[5] ? parseInt(cols[5]) : Infinity,
           color: `hsl(${hue}, 70%, 50%)`, // Use HSL for unique colors
+          ioDuration: parseInt(cols[3]) || 0,
+          ioPeriod: parseInt(cols[4]) || 0,
         };
       });
 
@@ -132,7 +138,7 @@ const ProcessSimulator = () => {
     const totalBurstTime = processData.reduce((sum: number, process: Process) => sum + process.burstTime, 0);
     let clockCount: number = 0;
     const remainingProcessesData: Process[] = processData.map((data: Process) => 
-      new Process(data.pid, data.arrivalTime, data.burstTime, data.priority, data.color, 0, 0)
+      new Process(data.pid, data.arrivalTime, data.burstTime, data.priority, data.color, 0, 0, data.ioDuration, data.ioPeriod)
     );
     remainingProcessesData.sort((a: Process, b: Process) => a.arrivalTime - b.arrivalTime);
     const waitingQueue: Process[] = [];
@@ -407,6 +413,8 @@ const ProcessSimulator = () => {
                     <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">Process</th>
                     <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">Arrival</th>
                     <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">Burst</th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">I/0 Duration</th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">I/0 Period</th>
                     <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">Priority</th>
                   </tr>
                 </thead>
@@ -416,6 +424,8 @@ const ProcessSimulator = () => {
                       <td className="whitespace-nowrap px-4 sm:px-6 py-4 font-medium text-gray-900">{process.pid}</td>
                       <td className="px-4 sm:px-6 py-4 text-gray-700">{process.arrivalTime}</td>
                       <td className="px-4 sm:px-6 py-4 text-gray-700">{process.burstTime}</td>
+                      <td className="px-4 sm:px-6 py-4 text-gray-700">{process.ioDuration}</td>
+                      <td className="px-4 sm:px-6 py-4 text-gray-700">{process.ioPeriod}</td>
                       <td className="px-4 sm:px-6 py-4 text-gray-700">{process.priority}</td>
                     </tr>
                   ))}
