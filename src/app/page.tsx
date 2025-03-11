@@ -54,18 +54,14 @@ const ProcessSimulator = () => {
   const [averageResponseTime, setAverageResponseTime] = useState(0);
   const [averageTurnaroundTime, setAverageTurnaroundTime] = useState(0);
   const [hasRunBefore, setHasRunBefore] = useState(false); // Track if simulation has run before
-  const colorPalette = ["#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#A133FF", "#33FFF9"];
   
   const fileInputRef = useRef<HTMLInputElement>(null);  
   const stopRef = useRef(false);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (!files || files.length === 0) {
-      console.warn("No file selected");
-      return;
-    }
-  
+    if (!files || files.length === 0) return;
+
     const file = files[0];
     setCsvFile(file);
 
@@ -73,25 +69,33 @@ const ProcessSimulator = () => {
     reader.onload = (e) => {
       const text = e.target?.result as string | null;
       if (!text) return;
-      const rows = text.split("\n").slice(1);
+      
+      const rows = text.split("\n")
+        .slice(1)
+        .filter(row => row.trim() !== ""); // Filter empty rows
+      
+      const numProcesses = rows.length;
       const parsedData = rows.map((row, index) => {
         const cols = row.split(",");
+        const hue = (index * 360) / numProcesses; // Evenly distribute hues
+        
         return {
           pid: `P${cols[0]}`,
           arrivalTime: parseInt(cols[1]) || 0,
           burstTime: parseInt(cols[2]) || 0,
           priority: cols[5] ? parseInt(cols[5]) : Infinity,
-          color: colorPalette[index % colorPalette.length],
+          color: `hsl(${hue}, 70%, 50%)`, // Use HSL for unique colors
         };
       });
+
       setProcessData(
         parsedData.map(process => ({
           ...process,
-          currentExecutionTime: 0, 
+          currentExecutionTime: 0,
           completionTime: 0
         }))
       );
-          };
+    };
     reader.readAsText(file);
   };
 
