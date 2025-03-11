@@ -26,7 +26,7 @@ class Process {
 
 const ProcessSimulator = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [processData, setProcessData] = useState([]);
+  const [processData, setProcessData] = useState<Process[]>([]);
   const [simulationData, setSimulationData] = useState([]);
   const [algorithm, setAlgorithm] = useState("FCFS");
   const [log, setLog] = useState([]);
