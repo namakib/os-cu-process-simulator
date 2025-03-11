@@ -40,6 +40,7 @@ interface LogEntry {
 }
 
 const ProcessSimulator = () => {
+  
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [processData, setProcessData] = useState<Process[]>([]);
   const [simulationData, setSimulationData] = useState<Process[]>([]);
@@ -55,7 +56,7 @@ const ProcessSimulator = () => {
   const [hasRunBefore, setHasRunBefore] = useState(false); // Track if simulation has run before
   const colorPalette = ["#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#A133FF", "#33FFF9"];
   
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);  
   const stopRef = useRef(false);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
