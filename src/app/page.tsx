@@ -420,8 +420,8 @@ const ProcessSimulator = () => {
           </div>
         )}
 
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm">
+          <div className="grid gap-6 md:grid-cols-3 min-w-0">
+            <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm">
             <h3 className="mb-4 text-lg font-medium text-gray-800">Queue Status</h3>
             <div className="space-y-4">
               <div>
@@ -470,9 +470,9 @@ const ProcessSimulator = () => {
             </div>
           </div>
 
-          <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm md:col-span-2">
-            <h3 className="mb-4 text-lg font-medium text-gray-800">Gantt Chart</h3>
-            <div className="overflow-x-auto">
+          <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm md:col-span-2 min-w-0">
+          <h3 className="mb-4 text-lg font-medium text-gray-800">Gantt Chart</h3>
+          <div className="overflow-x-auto pb-2 -mx-4 sm:-mx-6 px-4 sm:px-6">
               <div className="flex border-b border-gray-200" style={{ minWidth: `${simulationData.length * 40}px` }}>
                 {simulationData.map((data, index) => (
                   <motion.div
@@ -492,8 +492,11 @@ const ProcessSimulator = () => {
               </div>
 
               <div 
-                className="relative mt-2 h-6 pl-[20px]"
-                style={{ width: `${simulationData.length * 40}px` }}
+                className="relative mt-2 h-6"
+                style={{ 
+                  minWidth: `${simulationData.length * 40}px`,
+                  width: simulationData.length > 15 ? `${simulationData.length * 40}px` : 'auto'
+                }}
               >
                 {Array.from({ length: simulationData.length + 1 }).map((_, index) => (
                   <div
