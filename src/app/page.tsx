@@ -120,9 +120,9 @@ const ProcessSimulator = () => {
   
       // Handle incoming processes
       if (remainingProcessesData.length > 0) {
-        let nextIncommingProcess = remainingProcessesData[0];
+        const nextIncommingProcess = remainingProcessesData[0];
         if (nextIncommingProcess.arrivalTime === clockCount) {
-          let currentProcess = remainingProcessesData.shift();
+          const currentProcess = remainingProcessesData.shift();
           waitingQueue.push(currentProcess);
           if (algorithm === "Priority") {
             waitingQueue.sort((a, b) => a.priority - b.priority);
