@@ -87,8 +87,8 @@ const ProcessSimulator = () => {
       setProcessData(
         parsedData.map(process => ({
           ...process,
-          currentExecutionTime: 0,  // Default value, update as needed
-          completionTime: 0         // Default value, update as needed
+          currentExecutionTime: 0, 
+          completionTime: 0
         }))
       );
           };
