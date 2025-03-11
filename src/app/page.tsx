@@ -227,6 +227,7 @@ const ProcessSimulator = () => {
           if (currentRunning) {
             completionTimes[currentRunning.pid] = clockCount; // Store completion time
           }
+          setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} is completed`);
           currentRunning = null;
           setCurrentRunning(null);
           continue;
