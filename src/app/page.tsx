@@ -13,6 +13,7 @@ class Process {
   currentExecutionTime: number;
   completionTime: Number;
 
+
   constructor(pid: string, arrivalTime: number, burstTime: number, priority: number, color: string, currentExecutionTime: number, completionTime: Number) {
     this.pid = pid;
     this.arrivalTime = arrivalTime;
@@ -201,7 +202,14 @@ const ProcessSimulator = () => {
           continue;
         }
       }
-      clockCount++;
+      if (algorithm == "FCFS" || algorithm == "FCFS") {
+        clockCount++;
+      }
+
+      if (Object.keys(completionTimes).length == processData.length ) {
+        break
+      }
+      
     }
   
     // Simulation completed
@@ -294,16 +302,16 @@ const ProcessSimulator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
       <header className="mb-8">
-        <h1 className="text-4xl font-bold text-gray-900">CPU Scheduler Visualizer</h1>
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">CPU Scheduler Visualizer</h1>
         <p className="mt-2 text-gray-600">Interactive process scheduling simulation</p>
       </header>
 
       <div className="mb-8 space-y-6">
-        <div className="rounded-lg bg-white p-6 shadow-sm">
+        <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm">
           <div className="flex flex-wrap items-center gap-4">
-            <label className="flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-4 transition-colors hover:border-blue-500">
+            <label className="flex cursor-pointer items-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 sm:px-6 py-2 sm:py-4 transition-colors hover:border-blue-500">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
@@ -317,7 +325,6 @@ const ProcessSimulator = () => {
               />
             </label>
 
-{/* Algorithm Selector with Better Visibility */}
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">Algorithm:</span>
               <select 
@@ -337,20 +344,20 @@ const ProcessSimulator = () => {
               <button
                 onClick={runSimulation2}
                 disabled={running}
-                className={`rounded-lg px-6 py-2 font-medium text-white transition-colors ${running ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+                className={`rounded-lg px-4 sm:px-6 py-2 font-medium text-white transition-colors ${running ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'}`}
               >
                 {running ? 'Running...' : 'Start Simulation'}
               </button>
               <button
                 onClick={handleStop}
                 disabled={!running}
-                className="rounded-lg bg-red-600 px-6 py-2 font-medium text-white transition-colors hover:bg-red-700 disabled:bg-red-300"
+                className="rounded-lg bg-red-600 px-4 sm:px-6 py-2 font-medium text-white transition-colors hover:bg-red-700 disabled:bg-red-300"
               >
                 Stop
               </button>
               <button
                 onClick={handleClear}
-                className="rounded-lg bg-gray-200 px-6 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-300"
+                className="rounded-lg bg-gray-200 px-4 sm:px-6 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-300"
               >
                 Clear
               </button>
@@ -359,25 +366,25 @@ const ProcessSimulator = () => {
         </div>
 
         {processData.length > 0 && (
-          <div className="rounded-lg bg-white p-6 shadow-sm">
+          <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm">
             <h2 className="mb-4 text-xl font-semibold text-gray-800">Process Overview</h2>
             <div className="overflow-x-auto rounded-lg border border-gray-200">
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Process</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Arrival</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Burst</th>
-                    <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Priority</th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">Process</th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">Arrival</th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">Burst</th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">Priority</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {processData.map((process, index) => (
                     <tr key={index}>
-                      <td className="whitespace-nowrap px-6 py-4 font-medium text-gray-900">{process.pid}</td>
-                      <td className="px-6 py-4 text-gray-700">{process.arrivalTime}</td>
-                      <td className="px-6 py-4 text-gray-700">{process.burstTime}</td>
-                      <td className="px-6 py-4 text-gray-700">{process.priority}</td>
+                      <td className="whitespace-nowrap px-4 sm:px-6 py-4 font-medium text-gray-900">{process.pid}</td>
+                      <td className="px-4 sm:px-6 py-4 text-gray-700">{process.arrivalTime}</td>
+                      <td className="px-4 sm:px-6 py-4 text-gray-700">{process.burstTime}</td>
+                      <td className="px-4 sm:px-6 py-4 text-gray-700">{process.priority}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -387,7 +394,7 @@ const ProcessSimulator = () => {
         )}
 
         <div className="grid gap-6 md:grid-cols-3">
-          <div className="rounded-lg bg-white p-6 shadow-sm">
+          <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm">
             <h3 className="mb-4 text-lg font-medium text-gray-800">Queue Status</h3>
             <div className="space-y-4">
               <div>
@@ -436,53 +443,51 @@ const ProcessSimulator = () => {
             </div>
           </div>
 
-          <div className="rounded-lg bg-white p-6 shadow-sm md:col-span-2">
-  <h3 className="mb-4 text-lg font-medium text-gray-800">Gantt Chart</h3>
-  <div className="overflow-x-auto">
-    {/* Process Bars */}
-    <div className="flex border-b border-gray-200" style={{ minWidth: `${simulationData.length * 40}px` }}>
-      {simulationData.map((data, index) => (
-        <motion.div
-          key={index}
-          style={{ 
-            width: `${40}px`,
-            backgroundColor: data.color
-          }}
-          className="relative flex h-12 items-center justify-center border-r border-white text-sm font-medium text-white"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          {data.pid}
-        </motion.div>
-      ))}
-    </div>
+          <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm md:col-span-2">
+            <h3 className="mb-4 text-lg font-medium text-gray-800">Gantt Chart</h3>
+            <div className="overflow-x-auto">
+              <div className="flex border-b border-gray-200" style={{ minWidth: `${simulationData.length * 40}px` }}>
+                {simulationData.map((data, index) => (
+                  <motion.div
+                    key={index}
+                    style={{ 
+                      width: `${40}px`,
+                      backgroundColor: data.color
+                    }}
+                    className="relative flex h-12 items-center justify-center border-r border-white text-sm font-medium text-white"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {data.pid}
+                  </motion.div>
+                ))}
+              </div>
 
-    {/* Timeline with Clock Counts - Fixed version */}
-    <div 
-      className="relative mt-2 h-6 pl-[20px]" // Added padding-left here
-      style={{ width: `${simulationData.length * 40}px` }}
-    >
-      {Array.from({ length: simulationData.length + 1 }).map((_, index) => (
-        <div
-          key={index}
-          className="absolute top-0 text-xs text-gray-500"
-          style={{ 
-            left: `${index * 40}px`,
-            transform: index === 0 ? 'translateX(0)' : 'translateX(-50%)' // Conditional transform
-          }}
-        >
-          {index}
-        </div>
-      ))}
-    </div>
-  </div>
-</div>
+              <div 
+                className="relative mt-2 h-6 pl-[20px]"
+                style={{ width: `${simulationData.length * 40}px` }}
+              >
+                {Array.from({ length: simulationData.length + 1 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="absolute top-0 text-xs text-gray-500"
+                    style={{ 
+                      left: `${index * 40}px`,
+                      transform: index === 0 ? 'translateX(0)' : 'translateX(-50%)'
+                    }}
+                  >
+                    {index}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="rounded-lg bg-white p-6 shadow-sm">
+        <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm">
           <h3 className="mb-4 text-lg font-medium text-gray-800">Performance Metrics</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-lg bg-blue-50 p-4">
               <dt className="text-sm font-medium text-blue-600">Avg Wait Time</dt>
               <dd className="mt-1 text-2xl font-semibold text-blue-700">{averageWaitTime.toFixed(2)}</dd>
@@ -498,25 +503,27 @@ const ProcessSimulator = () => {
           </div>
         </div>
 
-        <div className="rounded-lg bg-white p-6 shadow-sm">
+        <div className="rounded-lg bg-white p-4 sm:p-6 shadow-sm">
           <h3 className="mb-4 text-lg font-medium text-gray-800">Simulation Log</h3>
           <div className="overflow-x-auto rounded-lg border border-gray-200">
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Time</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Event</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Running</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Waiting</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">Time</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">Event</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">Running</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">Ready</th>
+                  <th className="px-4 sm:px-6 py-3 text-left text-sm font-medium text-gray-500">Waiting</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {log.map((entry, index) => (
                   <tr key={index}>
-                    <td className="whitespace-nowrap px-6 py-4 font-mono text-sm text-gray-600">{entry.time}</td>
-                    <td className="px-6 py-4 text-sm text-gray-900">{entry.event}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{entry.running || '-'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{entry.waiting || '-'}</td>
+                    <td className="whitespace-nowrap px-4 sm:px-6 py-4 font-mono text-sm text-gray-600">{entry.time}</td>
+                    <td className="px-4 sm:px-6 py-4 text-sm text-gray-900">{entry.event}</td>
+                    <td className="px-4 sm:px-6 py-4 text-sm text-gray-600">{entry.running || '-'}</td>
+                    <td className="px-4 sm:px-6 py-4 text-sm text-gray-600">{entry.ready || '-'}</td>
+                    <td className="px-4 sm:px-6 py-4 text-sm text-gray-600">{entry.waiting || '-'}</td>
                   </tr>
                 ))}
               </tbody>
