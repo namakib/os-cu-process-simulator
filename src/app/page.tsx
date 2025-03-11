@@ -44,7 +44,13 @@ const ProcessSimulator = () => {
   const stopRef = useRef(false);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files[0];
+    const files = event.target.files;
+    if (!files || files.length === 0) {
+      console.warn("No file selected");
+      return;
+    }
+  
+    const file = files[0];
     setCsvFile(file);
 
     const reader = new FileReader();
