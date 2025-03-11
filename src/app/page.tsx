@@ -105,7 +105,6 @@ const ProcessSimulator = () => {
     setCurrentRunning(null);
     setCurrentQueue([]);
     setCurrentWaiting([]);
-    setCurrentClock(0);
     setAverageWaitTime(0);
     setAverageResponseTime(0);
     setAverageTurnaroundTime(0);
@@ -286,7 +285,6 @@ const ProcessSimulator = () => {
     setRunning(false);
     setCurrentRunning(null);
     setCurrentQueue([]);
-    setCurrentClock(0);
     setCurrentWaiting([]);
     setHasRunBefore(false); // Reset the hasRunBefore state
     if (fileInputRef.current) {
@@ -303,7 +301,6 @@ const ProcessSimulator = () => {
     setRunning(false);
     setCurrentRunning(null);
     setCurrentQueue([]);
-    setCurrentClock(0);
     setCurrentWaiting([]);
     setHasRunBefore(false); // Reset the hasRunBefore state
     if (fileInputRef.current) {
