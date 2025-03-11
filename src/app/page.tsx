@@ -24,6 +24,13 @@ class Process {
   }
 }
 
+interface ProcessMetrics {
+  pid: number;
+  turnaroundTime: number;
+  waitTime: number;
+  responseTime: number;
+}
+
 const ProcessSimulator = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [processData, setProcessData] = useState<Process[]>([]);
@@ -79,7 +86,7 @@ const ProcessSimulator = () => {
     reader.readAsText(file);
   };
 
-  const runSimulation2 = async () => {
+  const runSimulation2 = async (): Promise<void> => {
     if (!csvFile) {
       alert("Please upload a CSV file first.");
       return;
@@ -109,18 +116,18 @@ const ProcessSimulator = () => {
     setAverageResponseTime(0);
     setAverageTurnaroundTime(0);
   
-    const totalBurstTime = processData.reduce((sum, process) => sum + process.burstTime, 0);
-    let clockCount = 0;
-    const remainingProcessesData = processData.map(data => 
+    const totalBurstTime = processData.reduce((sum: number, process: Process) => sum + process.burstTime, 0);
+    let clockCount: number = 0;
+    const remainingProcessesData: Process[] = processData.map((data: Process) => 
       new Process(data.pid, data.arrivalTime, data.burstTime, data.priority, data.color, 0, 0)
     );
-    remainingProcessesData.sort((a, b) => a.arrivalTime - b.arrivalTime);
-    const waitingQueue: Process [] = [];
-    let readyProcess = null;
-    let currentRunning = null;
-    const scheduledProcess = [];
-    const firstResponse = {}; // Track the first response time for each process
-    const completionTimes = {}; // Track completion time for each process
+    remainingProcessesData.sort((a: Process, b: Process) => a.arrivalTime - b.arrivalTime);
+    const waitingQueue: Process[] = [];
+    let readyProcess: Process | null = null;
+    let currentRunning: Process | null = null;
+    const scheduledProcess: Process[] = [];
+    const firstResponse: { [key: number]: number } = {}; // Track the first response time for each process
+    const completionTimes: { [key: number]: number } = {}; // Track completion time for each process
   
     while (clockCount <= totalBurstTime) {
       if (stopRef.current) {
@@ -132,17 +139,19 @@ const ProcessSimulator = () => {
   
       // Handle incoming processes
       if (remainingProcessesData.length > 0) {
-        const nextIncommingProcess = remainingProcessesData[0];
+        const nextIncommingProcess: Process = remainingProcessesData[0];
         if (nextIncommingProcess.arrivalTime === clockCount) {
-          const currentProcess = remainingProcessesData.shift();
-          waitingQueue.push(currentProcess);
-          if (algorithm === "Priority") {
-            waitingQueue.sort((a, b) => a.priority - b.priority);
-            setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentProcess.pid} pushed to waiting queue by priority`);
-          } else {
-            setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentProcess.pid} pushed to waiting queue`);
+          const currentProcess: Process | undefined = remainingProcessesData.shift();
+          if (currentProcess) {
+            waitingQueue.push(currentProcess);
+            if (algorithm === "Priority") {
+              waitingQueue.sort((a: Process, b: Process) => a.priority - b.priority);
+              setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentProcess.pid} pushed to waiting queue by priority`);
+            } else {
+              setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentProcess.pid} pushed to waiting queue`);
+            }
+            setCurrentWaiting(waitingQueue);
           }
-          setCurrentWaiting(waitingQueue);
           continue;
         }
       }
@@ -150,7 +159,7 @@ const ProcessSimulator = () => {
       // Handle process scheduling
       if (currentRunning == null) {
         if (readyProcess == null) {
-          readyProcess = waitingQueue.shift();
+          readyProcess = waitingQueue.shift() || null;
           if (readyProcess) {
             setCurrentWaiting(waitingQueue);
             setCurrentQueue([readyProcess]);
@@ -165,7 +174,7 @@ const ProcessSimulator = () => {
           setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} pushed to running`);
   
           // Track first response time
-          if (!firstResponse[currentRunning.pid]) {
+          if (currentRunning && !firstResponse[currentRunning.pid]) {
             firstResponse[currentRunning.pid] = clockCount;
           }
           continue;
@@ -195,7 +204,7 @@ const ProcessSimulator = () => {
                 setSimulationData(scheduledProcess);
                 setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} is running`);
               } else {
-                const pid = currentRunning.pid;
+                const pid: number = currentRunning.pid;
                 currentRunning.currentExecutionTime = 0;
                 waitingQueue.push(currentRunning);
                 currentRunning = null;
@@ -206,7 +215,9 @@ const ProcessSimulator = () => {
           }
         } else {
           // Process completed
-          completionTimes[currentRunning.pid] = clockCount; // Store completion time
+          if (currentRunning) {
+            completionTimes[currentRunning.pid] = clockCount; // Store completion time
+          }
           currentRunning = null;
           setCurrentRunning(null);
           continue;
@@ -215,22 +226,21 @@ const ProcessSimulator = () => {
       if (algorithm == "FCFS" || algorithm == "FCFS") {
         clockCount++;
       }
-
-      if (Object.keys(completionTimes).length == processData.length ) {
-        break
+  
+      if (Object.keys(completionTimes).length == processData.length) {
+        break;
       }
-      
     }
   
     // Simulation completed
     console.log("Process completed");
   
     // Calculate metrics after simulation ends
-    const processes = processData.map((process) => {
-      const completionTime = completionTimes[process.pid] || 0;
-      const turnaroundTime = completionTime - process.arrivalTime;
-      const waitTime = turnaroundTime - process.burstTime;
-      const responseTime = firstResponse[process.pid] - process.arrivalTime;
+    const processes: ProcessMetrics[] = processData.map((process: Process) => {
+      const completionTime: number = completionTimes[process.pid] || 0;
+      const turnaroundTime: number = completionTime - process.arrivalTime;
+      const waitTime: number = turnaroundTime - process.burstTime;
+      const responseTime: number = firstResponse[process.pid] ? firstResponse[process.pid] - process.arrivalTime : 0;
   
       return {
         pid: process.pid,
@@ -240,9 +250,9 @@ const ProcessSimulator = () => {
       };
     });
   
-    const totalWaitTime = processes.reduce((sum, process) => sum + process.waitTime, 0);
-    const totalResponseTime = processes.reduce((sum, process) => sum + process.responseTime, 0);
-    const totalTurnaroundTime = processes.reduce((sum, process) => sum + process.turnaroundTime, 0);
+    const totalWaitTime: number = processes.reduce((sum: number, process: ProcessMetrics) => sum + process.waitTime, 0);
+    const totalResponseTime: number = processes.reduce((sum: number, process: ProcessMetrics) => sum + process.responseTime, 0);
+    const totalTurnaroundTime: number = processes.reduce((sum: number, process: ProcessMetrics) => sum + process.turnaroundTime, 0);
   
     setAverageWaitTime(totalWaitTime / processData.length);
     setAverageResponseTime(totalResponseTime / processData.length);
