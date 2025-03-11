@@ -115,7 +115,7 @@ const ProcessSimulator = () => {
       new Process(data.pid, data.arrivalTime, data.burstTime, data.priority, data.color, 0, 0)
     );
     remainingProcessesData.sort((a, b) => a.arrivalTime - b.arrivalTime);
-    const waitingQueue = [];
+    const waitingQueue: Process [] = [];
     let readyProcess = null;
     let currentRunning = null;
     const scheduledProcess = [];
