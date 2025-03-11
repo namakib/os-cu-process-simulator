@@ -126,8 +126,8 @@ const ProcessSimulator = () => {
     let readyProcess: Process | null = null;
     let currentRunning: Process | null = null;
     const scheduledProcess: Process[] = [];
-    const firstResponse: { [key: number]: number } = {}; // Track the first response time for each process
-    const completionTimes: { [key: number]: number } = {}; // Track completion time for each process
+    const firstResponse: { [key: string]: number } = {}; // Track the first response time for each process
+    const completionTimes: { [key: string]: number } = {}; // Track completion time for each process
   
     while (clockCount <= totalBurstTime) {
       if (stopRef.current) {
@@ -204,7 +204,7 @@ const ProcessSimulator = () => {
                 setSimulationData(scheduledProcess);
                 setLoggger(currentRunning, clockCount, readyProcess, waitingQueue, `${currentRunning.pid} is running`);
               } else {
-                const pid: number = currentRunning.pid;
+                const pid: string = currentRunning.pid;
                 currentRunning.currentExecutionTime = 0;
                 waitingQueue.push(currentRunning);
                 currentRunning = null;
