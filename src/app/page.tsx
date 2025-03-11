@@ -34,11 +34,11 @@ interface ProcessMetrics {
 const ProcessSimulator = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [processData, setProcessData] = useState<Process[]>([]);
-  const [simulationData, setSimulationData] = useState([]);
+  const [simulationData, setSimulationData] = useState<Process[]>([]);
   const [algorithm, setAlgorithm] = useState("FCFS");
   const [log, setLog] = useState([]);
   const [running, setRunning] = useState(false);
-  const [currentRunning, setCurrentRunning] = useState(null);
+  const [currentRunning, setCurrentRunning] = useState<Process | null>(null);
   const [currentQueue, setCurrentQueue] = useState<Process[]>([]);
   const [currentWaiting, setCurrentWaiting] = useState<Process[]>([]);
   const [averageWaitTime, setAverageWaitTime] = useState(0);
