@@ -2,7 +2,6 @@
 
 import React, { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Button, Select, MenuItem, Input, Table, TableHead, TableRow, TableCell, TableBody, Paper } from "@mui/material";
 
 class Process {
   pid: string;
