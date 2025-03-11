@@ -31,12 +31,20 @@ interface ProcessMetrics {
   responseTime: number;
 }
 
+interface LogEntry {
+  time: number;
+  running: string | null;
+  ready: string | null;
+  waiting: string;
+  event: string;
+}
+
 const ProcessSimulator = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [processData, setProcessData] = useState<Process[]>([]);
   const [simulationData, setSimulationData] = useState<Process[]>([]);
   const [algorithm, setAlgorithm] = useState("FCFS");
-  const [log, setLog] = useState([]);
+  const [log, setLog] = useState<LogEntry[]>([]);
   const [running, setRunning] = useState(false);
   const [currentRunning, setCurrentRunning] = useState<Process | null>(null);
   const [currentQueue, setCurrentQueue] = useState<Process[]>([]);
